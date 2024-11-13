@@ -125,4 +125,51 @@ class ProductLoadCommandTest extends TestCase
 
         $this->assertEquals(Command::SUCCESS, $result);
     }
+
+    #[Test]
+    public function test_execute_with_failed_product_insertion_logs_error(): void
+    {
+        $projectDir = __DIR__;
+        $this->kernel->method('getProjectDir')->willReturn($projectDir);
+
+        $productData = [
+            'products' => [
+                ['sku' => '001', 'name' => 'Test Product', 'price' => 100, 'category' => 'Category1'],
+                ['sku' => '002', 'name' => 'Another Product', 'price' => 150, 'category' => 'Category2'],
+            ]
+        ];
+
+        $datasetDir = $projectDir . '/dataset';
+        mkdir($datasetDir);
+        file_put_contents($projectDir . '/dataset/products.json', json_encode($productData));
+
+        // Simula un fallo en la creación del segundo producto
+        $this->createNewProductService->expects($this->exactly(2))
+            ->method('execute')
+            ->willReturnOnConsecutiveCalls(
+                $this->createMock(Product::class),
+                $this->throwException(new \Exception('Database error'))
+            );
+
+        $this->productRepository->expects($this->once())->method('save');
+
+        $this->logger->expects($this->exactly(1))
+            ->method('error')
+            ->withConsecutive(
+                ['Failed to insert product', $productData['products'][1]]
+            );
+
+        $input = $this->createMock(InputInterface::class);
+        $output = $this->createMock(OutputInterface::class);
+
+        $command = new ProductLoadCommand($this->productRepository, $this->createNewProductService, $this->kernel, $this->logger);
+        $result = $command->run($input, $output);
+
+        unlink($projectDir . '/dataset/products.json');
+        rmdir($datasetDir);
+
+        $this->assertEquals(Command::SUCCESS, $result);
+    }
+
+
 }

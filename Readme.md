@@ -160,5 +160,31 @@ make test
 ````
 
 
-## 
+## Some implementation details:
+
+Several types of tests have been created to cover a large part of the functionality.
+
+I considered some tests unnecessary, like `ProductSerializer`, because the `ProductListSerializerTest` is an integration test that already covers the `ProductSerializer` and `DiscountCalculatorService`.
+
+On the other hand, I added a unit test for the `DiscountCalculatorService`, since the discount calculator is more likely to undergo modifications than the serializer itself. This approach provides protection at both the component level and in terms of expected results in the integration test.
+
+
+
+# FAQ
+
+### Can I modify the dataset?
+
+Once the application has been initialized with the command, you can rerun the `app:load-products` command.
+
+To do so, simply run:
+
+````
+docker-compose -f docker-compose.yml exec php php bin/console app:load-products
+````
+
+The database ensures that SKUs are unique, so there is no issue with running the execution multiple times.
+
+
+
+
 
