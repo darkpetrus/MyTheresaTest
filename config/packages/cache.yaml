@@ -1,0 +1,14 @@
+framework:
+    cache:
+        pools:
+            app.redis_cache:
+                adapter: cache.adapter.redis
+                default_lifetime: 3600
+
+parameters:
+    redis_dsn: '%env(REDIS_URL)%'
+
+services:
+    RedisCache:
+        class: Symfony\Component\Cache\Adapter\RedisAdapter
+        arguments: ['%redis_dsn%']

@@ -1,0 +1,62 @@
+name: my-theresa-test-app
+
+services:
+  php:
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    container_name: php
+    volumes:
+      - ./:/var/www/html
+      - ./vendor:/var/www/html/vendor
+    working_dir: /var/www/html
+    networks:
+      - app-network
+    depends_on:
+      - db
+      - redis
+    environment:
+      SYMFONY_ENV: dev
+
+
+  db:
+    # Mysql 8.0 to have the control of the version and changes
+    image: mysql:8.0.40
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: symfony
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app-network
+    ports:
+      - "3306:3306"
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    networks:
+      - app-network
+    ports:
+      - "6379:6379"
+
+  webserver:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - app-network
+    ports:
+      - "8080:80"
+    depends_on:
+      - php
+
+volumes:
+  db_data:
+
+networks:
+  app-network:
+    driver: bridge

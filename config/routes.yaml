@@ -1,0 +1,21 @@
+
+controllers:
+    resource:
+        path: ../src/Shared/Infrastructure/Controller
+        namespace: App\Shared\Infrastructure\Controller
+    type: attribute
+
+dummy:
+    path: /dummy
+    controller: App\Shared\Infrastructure\Controller\DummyController::index
+    methods: GET
+
+products_get:
+    path: /products
+    controller: App\Backoffice\Products\Infrastructure\Controller\ProductController::getProducts
+    methods: GET
+
+products_sku_get:
+    path: /products/sku
+    controller: App\Backoffice\Products\Infrastructure\Controller\ProductController::getProductsBySku
+    methods: GET
