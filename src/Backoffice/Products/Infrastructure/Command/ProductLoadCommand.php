@@ -61,7 +61,7 @@ class ProductLoadCommand extends Command
 
                 $this->productRepository->save($product);
             } catch (Throwable){
-                $this->logger->error('Failed to insert product', $productData);
+                $this->logger->error('Failed to insert product', ['product_data_sku' => $productData['sku']]);
                 continue;
             }
         }

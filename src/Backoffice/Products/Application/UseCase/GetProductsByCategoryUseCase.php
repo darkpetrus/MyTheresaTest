@@ -32,15 +32,12 @@ class GetProductsByCategoryUseCase
         // Note: You can refresh cache when new products are created.
         if(!$cachedProducts->isHit() || empty($cachedProducts->get())){
             $products = $this->repository->findAllByCategoryAndPrice($category, $priceLessThan);
-            $serializedResponse = $this->productListSerializer->serialize($products);
-
-            $cachedProducts->set($serializedResponse);
+            $cachedProducts->set($products);
             $cachedProducts->expiresAfter(3600);
             $this->cache->save($cachedProducts);
         }else{
-            $serializedResponse = $cachedProducts->get();
+            $products = $cachedProducts->get();
         }
-
-        return $serializedResponse;
+        return $this->productListSerializer->serialize($products);
     }
 }

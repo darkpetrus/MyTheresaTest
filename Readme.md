@@ -1,6 +1,6 @@
 <details>
 <summary>Exercise Description</summary>
-## Description
+
 We want you to implement a REST API endpoint that given a list of products, applies some discounts to them and can be filtered.
 
 You are free to choose whatever language and tools you are most comfortable with. Please add instructions on how to run it and publish it in Github.
@@ -118,6 +118,20 @@ make init
 
 This first command, make the build of all containers in docker and fulfill the database with the first dataset.
 
+## Usage
+
+Access or perform a GET request on 
+`http://localhost:8080/products` 
+to retrieve the products.
+
+The supported parameters are `priceLessThan` and `category`.
+
+Example:
+```
+http://localhost:8080/products?category=boots
+```
+You can use them together or separately. The endpoint will return the filtered result.
+
 ## Tests
 ### Description of tests
 
@@ -160,17 +174,8 @@ make test
 ````
 
 
-## Some implementation details:
-
-Several types of tests have been created to cover a large part of the functionality.
-
-I considered some tests unnecessary, like `ProductSerializer`, because the `ProductListSerializerTest` is an integration test that already covers the `ProductSerializer` and `DiscountCalculatorService`.
-
-On the other hand, I added a unit test for the `DiscountCalculatorService`, since the discount calculator is more likely to undergo modifications than the serializer itself. This approach provides protection at both the component level and in terms of expected results in the integration test.
 
 
-
-# FAQ
 
 ### Can I modify the dataset?
 
@@ -184,7 +189,28 @@ docker-compose -f docker-compose.yml exec php php bin/console app:load-products
 
 The database ensures that SKUs are unique, so there is no issue with running the execution multiple times.
 
+The command ignores database errors, so if a product cannot be inserted, it is simply skipped, and the execution continues. 
+Errors are displayed in the console, and a log entry will be created in `var/logs` thanks to the `Monolog` package.
+
+## Some implementation details:
+
+Several types of tests have been created to cover a large part of the functionality.
+
+I considered some tests unnecessary, like `ProductSerializer`, because the `ProductListSerializerTest` is an integration test that already covers the `ProductSerializer` and `DiscountCalculatorService`.
+
+On the other hand, I added a unit test for the `DiscountCalculatorService`, since the discount calculator is more likely to undergo modifications than the serializer itself. This approach provides protection at both the component level and in terms of expected results in the integration test.
 
 
+Redis is being used to cache the endpoint with keys based on the input itself. This means we assume that a database query will always return the same result, so there is no need to call the database constantly. Instead, we cache the response directly.
 
+There are two strategies to follow based on my experience:
 
+Cache the result of the serializer.
+Cache the database response.
+For entities that have little variation or that, once inserted into the database, will not change much, it is better to cache the serializer result.
+
+Initially, I considered caching everything, but I believe it would be more appropriate to cache only the database part. This is because the serializer applies discounts (which could come from hardcoded data or other sources). While these are currently hardcoded, changing to fetch them from the database would be feasible and would not provide real-time results, which is essential for eCommerce, especially when promotions are activated.
+
+Another strategy could be to cache at the browser level, for example, product categories, which in my experience do not change daily. With a cache lasting a few hours, a significant number of queries can be saved in high-volume environments.
+
+ElasticSearch could also be applied if the catalog is very large and contains a lot of data. In this case, if we are only retrieving 5 products per call to the endpoint, it would be overengineering. However, each case should be analyzed, considering the volume of requests and specific requirements.

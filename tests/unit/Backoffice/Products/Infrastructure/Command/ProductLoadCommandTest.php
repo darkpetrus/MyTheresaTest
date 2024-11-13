@@ -134,8 +134,7 @@ class ProductLoadCommandTest extends TestCase
 
         $productData = [
             'products' => [
-                ['sku' => '001', 'name' => 'Test Product', 'price' => 100, 'category' => 'Category1'],
-                ['sku' => '002', 'name' => 'Another Product', 'price' => 150, 'category' => 'Category2'],
+                ['sku' => '0001', 'name' => 'Test Product', 'price' => 100, 'category' => 'Category1'],
             ]
         ];
 
@@ -143,21 +142,18 @@ class ProductLoadCommandTest extends TestCase
         mkdir($datasetDir);
         file_put_contents($projectDir . '/dataset/products.json', json_encode($productData));
 
-        // Simula un fallo en la creación del segundo producto
-        $this->createNewProductService->expects($this->exactly(2))
+        $this->createNewProductService->expects($this->exactly(1))
             ->method('execute')
-            ->willReturnOnConsecutiveCalls(
-                $this->createMock(Product::class),
-                $this->throwException(new \Exception('Database error'))
-            );
+            ->willReturn(Product::createFromArray(
+                ['sku' => '0001', 'name' => 'Test Product', 'price' => 100, 'category' => 'Category1']
+            ));
 
-        $this->productRepository->expects($this->once())->method('save');
+        $this->productRepository->expects($this->once())->method('save')
+            ->willThrowException(new \Exception('Database error'));
 
-        $this->logger->expects($this->exactly(1))
+        $this->logger->expects($this->once())
             ->method('error')
-            ->withConsecutive(
-                ['Failed to insert product', $productData['products'][1]]
-            );
+            ->with('Failed to insert product', ['product_data_sku' => '0001']);
 
         $input = $this->createMock(InputInterface::class);
         $output = $this->createMock(OutputInterface::class);
@@ -170,6 +166,4 @@ class ProductLoadCommandTest extends TestCase
 
         $this->assertEquals(Command::SUCCESS, $result);
     }
-
-
 }
