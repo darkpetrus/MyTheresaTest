@@ -7,8 +7,8 @@ DOCKER_COMPOSE="docker-compose -f docker-compose.yml"
 init() {
   $DOCKER_COMPOSE up -d --build
   $DOCKER_COMPOSE exec php composer install --no-interaction
-  $DOCKER_COMPOSE exec php bin/console doctrine:migrations:migrate --no-interaction
-  $DOCKER_COMPOSE exec php bin/console app:load-products
+  $DOCKER_COMPOSE exec php php bin/console doctrine:migrations:migrate --no-interaction
+  $DOCKER_COMPOSE exec php php bin/console app:load-products
 }
 
 up() {
@@ -32,7 +32,7 @@ bash() {
 }
 
 test() {
-  docker-compose exec php bin/phpunit
+  docker-compose exec php php bin/phpunit
 }
 
 case "$1" in
